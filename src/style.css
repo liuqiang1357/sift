@@ -1070,6 +1070,7 @@ button:hover {
   margin-top: 4px;
 }
 .follow {
+  flex-shrink: 0;
   border: 1px solid #aabbfa;
   border-radius: 6px;
   color: var(--blue);
@@ -1634,6 +1635,8 @@ textarea {
   text-align: left;
 }
 .author-byline {
+  gap: 12px;
+  flex-wrap: wrap;
   display: flex;
   justify-content: space-between;
   align-items: center;

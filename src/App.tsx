@@ -225,6 +225,9 @@ function App() {
       setSelectedHistory([]);
       setClearHistory(false);
     }
+    if (p.kind === page?.kind && p.id === page?.id && p.title === page?.title)
+      return;
+    if (p.kind === "asset") setPeriod("日内");
     positions.current.push(bodyRef.current?.scrollTop ?? 0);
     setStack((s) => [
       ...s,
@@ -249,7 +252,7 @@ function App() {
     );
   }
   function toggleSave(id: string) {
-    setSaved((s) => (s.includes(id) ? s.filter((v) => v !== id) : [...s, id]));
+    setSaved((s) => (s.includes(id) ? s.filter((v) => v !== id) : [id, ...s]));
     setToast(saved.includes(id) ? "已取消收藏" : "已加入收藏");
   }
   function openStory(s: Story) {
@@ -257,6 +260,7 @@ function App() {
     push({ kind: "story", id: s.id, title: "事件详情" });
   }
   function chat(context: string) {
+    setChatInput("");
     setMessages([]);
     setChatId(crypto.randomUUID());
     push({ kind: "chat", title: l(context) });
@@ -317,7 +321,10 @@ function App() {
     return (
       <button
         className={`follow ${following.includes(id) ? "is-following" : ""}`}
-        aria-label={l(`${following.includes(id) ? "取消关注" : "关注"} ${id}`)}
+        aria-pressed={following.includes(id)}
+        aria-label={l(
+          `${following.includes(id) ? "取消关注" : "关注"} ${assets.find((asset) => asset.id === id)?.name ?? id}`,
+        )}
         onClick={() => toggleFollow(id)}
       >
         {following.includes(id) ? <Check size={14} /> : <Plus size={14} />}
@@ -404,10 +411,11 @@ function App() {
               () => toggleSave(s.id),
             )}
           </div>
-          {channel === "推荐" && tab === "explore" && (
+          {channel === "推荐" && tab === "explore" && !page && (
             <div className="reason">
               <Sparkles size={12} />
-              {l(s.reason)}
+              {l("示例推荐 · ")}
+              {l(s.topic)}
             </div>
           )}
         </div>
@@ -643,7 +651,7 @@ function App() {
             ...s.assets,
             ...(s.author ? [s.author] : []),
             s.topic,
-            ...sourceNames.filter((n) => s.source.includes(n)),
+            ...sourceNames.filter((n) => s.source.split(" · ")[0] === n),
           ].some((id) => following.includes(id))),
     );
     return (
@@ -870,7 +878,7 @@ function App() {
           <GroupRow
             icon={<UserRound size={18} />}
             label={l("我的关注")}
-            note={l("资产 · 主题 · 作者")}
+            note={l("资产 · 主题 · 作者 · 机构与媒体")}
             onClick={() => push({ kind: "following", title: "我的关注" })}
           />
           <GroupRow
@@ -1159,10 +1167,14 @@ function App() {
                   large
                 />
                 <div className="chart-labels">
-                  <span>09:30</span>
-                  <span>11:30</span>
-                  <span>14:00</span>
-                  <span>16:00</span>
+                  {(period === "日内"
+                    ? ["09:30", "11:30", "14:00", "16:00"]
+                    : period === "一周"
+                      ? ["09.10", "09.12", "09.14", "09.16"]
+                      : ["08.17", "08.27", "09.06", "09.16"]
+                  ).map((label) => (
+                    <span key={label}>{label}</span>
+                  ))}
                 </div>
                 <div className="periods">
                   {["日内", "一周", "一月"].map((p) => (
@@ -1207,7 +1219,7 @@ function App() {
               <input
                 autoFocus
                 aria-label={l("搜索内容")}
-                placeholder={l("搜索资讯、资产、主题或作者")}
+                placeholder={l("搜索资讯、资产、主题、作者或机构与媒体")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -1411,15 +1423,17 @@ function App() {
         if (!author) return null;
         return (
           <>
-            <div className="profile-identity">
-              <div className="avatar">{l(author.id).slice(0, 1)}</div>
-              <div>
-                <h1>{l(author.id)}</h1>
-                <p>{l(author.label)}</p>
+            <div className="title-row">
+              <div className="profile-identity">
+                <div className="avatar">{l(author.id).slice(0, 1)}</div>
+                <div>
+                  <h1>{l(author.id)}</h1>
+                  <p>{l(author.label)}</p>
+                </div>
               </div>
+              <Follow id={author.id} />
             </div>
             <p className="body-copy">{l(author.bio)}</p>
-            <Follow id={author.id} />
             <div className="section-heading">
               <h2>{l("最新内容")}</h2>
               <span>{l("最新优先")}</span>
@@ -1444,12 +1458,14 @@ function App() {
         return (
           <>
             <div className="eyebrow">SOURCE</div>
-            <h1>{l(source)}</h1>
+            <div className="title-row">
+              <h1>{l(source)}</h1>
+              <Follow id={source} />
+            </div>
             <p className="body-copy">{l(descriptions[source])}</p>
             <p className="small-note">
               {l("平台来源演示 · 简介与内容均为示例，不代表机构官方发布。")}
             </p>
-            <Follow id={source} />
             <div className="section-heading">
               <h2>{l("最新内容")}</h2>
               <span>{l("最新优先")}</span>
@@ -1480,7 +1496,7 @@ function App() {
             {visibleIds.length === 0 && (
               <Empty
                 text={l("还没有关注")}
-                hint={l("在探索中发现内容，或搜索资产、主题和作者。")}
+                hint={l("在探索中发现内容，或搜索关注对象。")}
               />
             )}
             {groups.map((group) => {
@@ -1680,9 +1696,12 @@ function App() {
       case "saved":
         return (
           <>
-            {saved
-              .filter((id) => id.startsWith("brief-"))
-              .map((id) => (
+            <p className="small-note">{l("最近收藏优先")}</p>
+            {saved.map((id) => {
+              const story = stories.find((story) => story.id === id);
+              if (story) return <StoryRow key={id} story={story} />;
+              if (!id.startsWith("brief-")) return null;
+              return (
                 <button
                   className="archive-row"
                   key={id}
@@ -1704,12 +1723,8 @@ function App() {
                   </div>
                   <ChevronRight size={16} />
                 </button>
-              ))}
-            {stories
-              .filter((s) => saved.includes(s.id))
-              .map((s) => (
-                <StoryRow key={s.id} story={s} />
-              ))}
+              );
+            })}
             {!saved.length && (
               <Empty
                 text={l("把值得回看的，留在这里")}
@@ -1853,6 +1868,7 @@ function App() {
                       setClearHistory(false);
                     } else if ("story" in item) openStory(item.story);
                     else {
+                      setChatInput("");
                       setMessages(item.conversation.messages);
                       setChatId(item.conversation.id);
                       push({ kind: "chat", title: item.conversation.context });
@@ -1949,13 +1965,15 @@ function App() {
                 <small>{l("当前讨论")}</small>
                 <b>{page.title}</b>
               </div>
-              {page.title !== "通用对话" &&
-                iconButton("结束当前上下文", <X size={16} />, () =>
-                  setStack((s) => [
-                    ...s.slice(0, -1),
-                    { kind: "chat", title: "通用对话" },
-                  ]),
-                )}
+              {iconButton("开始新对话", <Plus size={16} />, () => {
+                setMessages([]);
+                setChatInput("");
+                setChatId(crypto.randomUUID());
+                setStack((s) => [
+                  ...s.slice(0, -1),
+                  { kind: "chat", title: l("通用对话") },
+                ]);
+              })}
             </div>
             <div className="small-note">
               {l("本地情景回答 · 未连接模型或实时检索")}
