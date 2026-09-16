@@ -335,5 +335,10 @@
   "恢复默认": "Restore defaults",
   "保存": "Save",
   "市场概览已更新": "Market overview updated",
-  "返回不保存本次修改": "Go back to discard changes"
+  "返回不保存本次修改": "Go back to discard changes",
+  "这里展示与美联储相关的宏观经济与货币政策情景。": "Sample scenarios covering the Federal Reserve, macroeconomics and monetary policy.",
+  "这里展示科技产业、算力与基础设施相关的情景。": "Sample scenarios covering technology, computing and infrastructure.",
+  "这里展示价格、交易与资金变化相关的情景。": "Sample scenarios covering prices, trading and capital flows.",
+  "这里展示全球资产与商品市场相关的情景。": "Sample scenarios covering global assets and commodity markets.",
+  "平台来源演示 · 简介与内容均为示例，不代表机构官方发布。": "Demo source · Profiles and content are illustrative, not official publications."
 }

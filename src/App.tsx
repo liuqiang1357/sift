@@ -69,7 +69,14 @@ type Page = {
   followingIds?: string[];
 };
 const navIcons = [FileText, Compass, TrendingUp, UserRound];
-const initialFollowing = ["NVDA", "BTC", "宏观经济", "AI 与科技", "林序"];
+const initialFollowing = [
+  "NVDA",
+  "BTC",
+  "宏观经济",
+  "AI 与科技",
+  "林序",
+  "产业观察",
+];
 function Sparkline({
   values,
   large = false,
@@ -363,14 +370,30 @@ function App() {
               <button
                 className="author-link"
                 onClick={() =>
-                  push({ kind: "author", id: s.author, title: "作者" })
+                  push({
+                    kind: "author",
+                    id: s.author,
+                    title: "作者",
+                  })
                 }
               >
                 {l(s.author)}
                 <ChevronRight size={12} />
               </button>
             ) : (
-              <span>{l(s.source)}</span>
+              <button
+                className="author-link"
+                onClick={() =>
+                  push({
+                    kind: "source",
+                    id: s.source.split(" · ")[0],
+                    title: "机构与媒体",
+                  })
+                }
+              >
+                {l(s.source)}
+                <ChevronRight size={12} />
+              </button>
             )}
             {iconButton(
               saved.includes(s.id) ? "取消收藏" : "收藏",
@@ -1021,7 +1044,11 @@ function App() {
                       <button
                         className="author-link"
                         onClick={() =>
-                          push({ kind: "author", id: s.author, title: "作者" })
+                          push({
+                            kind: "author",
+                            id: s.author,
+                            title: "作者",
+                          })
                         }
                       >
                         <UserRound size={16} />
@@ -1031,7 +1058,19 @@ function App() {
                       <Follow id={s.author} />
                     </div>
                   ) : (
-                    s.source
+                    <button
+                      className="author-link"
+                      onClick={() =>
+                        push({
+                          kind: "source",
+                          id: s.source.split(" · ")[0],
+                          title: "机构与媒体",
+                        })
+                      }
+                    >
+                      {l(s.source)}
+                      <ChevronRight size={14} />
+                    </button>
                   ),
                 )}
                 <br />
@@ -1251,25 +1290,36 @@ function App() {
                   .filter((n) => matchesSearch(n, q))
                   .map((n) => (
                     <div className="topic-row" key={n}>
-                      {authors.some((a) => a.id === n) ? (
-                        <button
-                          className="author-link"
-                          onClick={() =>
-                            push({ kind: "author", id: n, title: "作者" })
-                          }
-                        >
-                          {l(n)}
-                          <small>{l("作者")}</small>
-                          <ChevronRight size={14} />
-                        </button>
-                      ) : (
-                        <span>
-                          {l(n)}
-                          <small>
-                            {l(topics.includes(n) ? "主题" : "机构与媒体")}
-                          </small>
-                        </span>
-                      )}
+                      <button
+                        className="author-link"
+                        onClick={() =>
+                          push({
+                            kind: authors.some((a) => a.id === n)
+                              ? "author"
+                              : topics.includes(n)
+                                ? "topic"
+                                : "source",
+                            id: n,
+                            title: authors.some((a) => a.id === n)
+                              ? "作者"
+                              : topics.includes(n)
+                                ? "主题详情"
+                                : "机构与媒体",
+                          })
+                        }
+                      >
+                        {l(n)}
+                        <small>
+                          {l(
+                            authors.some((a) => a.id === n)
+                              ? "作者"
+                              : topics.includes(n)
+                                ? "主题"
+                                : "机构与媒体",
+                          )}
+                        </small>
+                        <ChevronRight size={14} />
+                      </button>
                       <Follow id={n} />
                     </div>
                   ))}
@@ -1400,6 +1450,36 @@ function App() {
           </>
         );
       }
+      case "source": {
+        const source = sourceNames.find((name) => name === page.id);
+        if (!source) return null;
+        const descriptions: Record<string, string> = {
+          美联储: "这里展示与美联储相关的宏观经济与货币政策情景。",
+          产业观察: "这里展示科技产业、算力与基础设施相关的情景。",
+          市场数据: "这里展示价格、交易与资金变化相关的情景。",
+          全球市场观察: "这里展示全球资产与商品市场相关的情景。",
+        };
+        return (
+          <>
+            <div className="eyebrow">SOURCE</div>
+            <h1>{l(source)}</h1>
+            <p className="body-copy">{l(descriptions[source])}</p>
+            <p className="small-note">
+              {l("平台来源演示 · 简介与内容均为示例，不代表机构官方发布。")}
+            </p>
+            <Follow id={source} />
+            <div className="section-heading">
+              <h2>{l("最新内容")}</h2>
+              <span>{l("最新优先")}</span>
+            </div>
+            {stories
+              .filter((story) => story.source.split(" · ")[0] === source)
+              .map((story) => (
+                <StoryRow key={story.id} story={story} />
+              ))}
+          </>
+        );
+      }
       case "following": {
         const visibleIds = [
           ...new Set([...(page.followingIds ?? []), ...following]),
@@ -1432,34 +1512,31 @@ function App() {
                   {ids.map((id) => (
                     <div className="topic-row" key={id}>
                       <div>
-                        {group.label !== "机构与媒体" ? (
-                          <button
-                            className="author-link"
-                            onClick={() =>
-                              push({
-                                kind:
-                                  group.label === "资产"
-                                    ? "asset"
-                                    : group.label === "主题"
-                                      ? "topic"
-                                      : "author",
-                                id,
-                                title:
-                                  group.label === "作者"
-                                    ? "作者"
-                                    : `${group.label}详情`,
-                              })
-                            }
-                          >
-                            {l(assets.find((a) => a.id === id)?.name ?? id)}
-                            {group.label === "资产" && <small>{l(id)}</small>}
-                            <ChevronRight size={14} />
-                          </button>
-                        ) : (
-                          <span>
-                            {l(assets.find((a) => a.id === id)?.name ?? id)}
-                          </span>
-                        )}
+                        <button
+                          className="author-link"
+                          onClick={() =>
+                            push({
+                              kind:
+                                group.label === "资产"
+                                  ? "asset"
+                                  : group.label === "主题"
+                                    ? "topic"
+                                    : group.label === "作者"
+                                      ? "author"
+                                      : "source",
+                              id,
+                              title: ["作者", "机构与媒体"].includes(
+                                group.label,
+                              )
+                                ? group.label
+                                : `${group.label}详情`,
+                            })
+                          }
+                        >
+                          {l(assets.find((a) => a.id === id)?.name ?? id)}
+                          {group.label === "资产" && <small>{l(id)}</small>}
+                          <ChevronRight size={14} />
+                        </button>
                         {!following.includes(id) && (
                           <small className="unfollowed-note">
                             {l("已取消关注")}
