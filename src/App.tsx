@@ -1038,41 +1038,23 @@ function App() {
               </div>
               <h1 className="detail-title">{l(s.title)}</h1>
               <div className="detail-meta">
-                {l(
-                  s.author ? (
-                    <div className="author-byline">
-                      <button
-                        className="author-link"
-                        onClick={() =>
-                          push({
-                            kind: "author",
-                            id: s.author,
-                            title: "作者",
-                          })
-                        }
-                      >
-                        <UserRound size={16} />
-                        {l(s.author)}
-                        <ChevronRight size={14} />
-                      </button>
-                      <Follow id={s.author} />
-                    </div>
-                  ) : (
-                    <button
-                      className="author-link"
-                      onClick={() =>
-                        push({
-                          kind: "source",
-                          id: s.source.split(" · ")[0],
-                          title: "机构与媒体",
-                        })
-                      }
-                    >
-                      {l(s.source)}
-                      <ChevronRight size={14} />
-                    </button>
-                  ),
-                )}
+                <div className="author-byline">
+                  <button
+                    className="author-link"
+                    onClick={() =>
+                      push({
+                        kind: s.author ? "author" : "source",
+                        id: s.author ?? s.source.split(" · ")[0],
+                        title: s.author ? "作者" : "机构与媒体",
+                      })
+                    }
+                  >
+                    {s.author ? <UserRound size={16} /> : <Globe2 size={16} />}
+                    {l(s.author ?? s.source)}
+                    <ChevronRight size={14} />
+                  </button>
+                  <Follow id={s.author ?? s.source.split(" · ")[0]} />
+                </div>
                 <br />
                 2026.09.16 {l(s.time)} · Asia/Shanghai
               </div>
