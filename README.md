@@ -1,23 +1,27 @@
 # Sift
 
-围绕关注与偏好的财经资讯助手，包含简报、探索、行情和我的四个模块。
+Sift 是一个财经资讯阅读助手：通过每日简报了解重要变化，在探索中继续阅读，查看依据，并带着上下文追问。关注来源、自选资产和明确表达的兴趣共同帮助筛选相关信息。
 
-[在线 Demo](https://sift-demo.liuqiang1357.chatgpt.site) · 资讯、行情和 AI 回答均为演示数据。
+[在线演示](https://sift-demo.liuqiang1357.chatgpt.site)使用固定内容、示意行情和本地对话回复，尚未接入资讯供应商、实时行情或 AI 模型。本地修改需要另行部署才会更新线上页面。
 
 ## 本地运行
 
-需要 Node.js 22.12 或更高版本。
+需要 Node.js 22.12 或更高版本。项目使用 React、TypeScript 和 Vite。
 
 ```sh
 npm ci
 npm run dev
 ```
 
-打开 [本地 Demo](http://127.0.0.1:5173/)。技术栈为 React 19、TypeScript 7、Vite 8。
+打开[本地预览](http://127.0.0.1:5173/)。运行 `npm test` 检查行为规则，运行 `npm run build` 完成类型检查和生产构建。
 
 ## 文档
 
-- [功能设计](docs/product-design.md)：模块职责、交互规则与产品范围。
-- [Demo 说明](docs/demo.md)：已实现能力、示例数据、运行与发布方式。
-- [与产品方案的对比](docs/comparison-pm.md)。
-- [与 eg 方案的对比](docs/comparison-eg.md)。
+- [产品设计](docs/product-design.md)：阅读任务、核心概念与功能边界。
+- [内容规则](docs/content-rules.md)：来源、依据、重复发布、版本、筛选与简报快照。
+- [演示说明](docs/demo.md)：已实现能力、限制、本地数据与开发方式。
+- [示例情景与资料来源](docs/demo-scenarios.md)：真实背景、虚构材料及完整体验路径。
+- [与产品需求方案的对比](docs/comparison-pm.md)：主要取舍、代价及重新考虑的条件。
+- [与 eg 设计指南的对比](docs/comparison-eg.md)：保留卡片方案的价值，明确首版承担的职责。
+
+产品设计描述目标中的最小可用产品；具体实现状态以演示说明为准。交互能够运行，并不代表已经具备生产服务能力或验证了推荐效果。
